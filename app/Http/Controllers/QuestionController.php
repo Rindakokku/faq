@@ -145,7 +145,10 @@ class QuestionController extends Controller
         $tags = explode(',', $tagsList);
         $questions = array();
         foreach ($tags as $tag) {
-            $questions[] = Question::where('body', 'LIKE', "%#{$tag}%")->get();
+            $results = Question::where('body', 'LIKE', "%#{$tag}%")->get();
+            foreach ($results as $question) {
+                $questions[] = $question;
+            }
         }
         // Only return unique questions since a question may have multiple hashtags
         return array_unique($questions);
