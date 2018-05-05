@@ -12,6 +12,7 @@ class QuestionController extends Controller
     {
         $this->middleware('auth');
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -32,14 +33,14 @@ class QuestionController extends Controller
 
         $question = new Question;
         $edit = FALSE;
-        return view('questionForm', ['question' => $question,'edit' => $edit  ]);
+        return view('questionForm', ['question' => $question, 'edit' => $edit]);
 
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -58,8 +59,9 @@ class QuestionController extends Controller
         $question->user()->associate(Auth::user());
         $question->save();
 
-        return redirect()->route('home')->with('message', 'IT WORKS!');
+        // Update hashtags model with this question
 
+        return redirect()->route('home')->with('message', 'IT WORKS!');
 
 
         // return redirect()->route('questions.show', ['id' => $question->id]);
@@ -70,7 +72,7 @@ class QuestionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function show(Question $question)
@@ -81,20 +83,20 @@ class QuestionController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function edit(Question $question)
     {
         $edit = TRUE;
-        return view('questionForm', ['question' => $question, 'edit' => $edit ]);
+        return view('questionForm', ['question' => $question, 'edit' => $edit]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \Illuminate\Http\Request $request
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Question $question)
@@ -108,23 +110,44 @@ class QuestionController extends Controller
             'body.min' => 'Body must be at least 5 characters',
 
         ]);
+        // Get set of hashtags from old body
 
         $question->body = $request->body;
         $question->save();
 
-        return redirect()->route('questions.show',['question_id' => $question->id])->with('message', 'Saved');
+        // Determine hashtags set difference
+
+        // Update hashtags model with questions modified (recompute hashtags)
+
+        return redirect()->route('questions.show', ['question_id' => $question->id])->with('message', 'Saved');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy(Question $question)
     {
         $question->delete();
+
+        // Update hashtags model to reflect question deletion
+
+
         return redirect()->route('home')->with('message', 'Deleted');
 
+    }
+
+    public function search(Request $request)
+    {
+        $tagsList = $request->input('tags');
+        $tags = explode(',', $tagsList);
+        $questions = array();
+        foreach ($tags as $tag) {
+            $questions[] = Question::where('body', 'LIKE', "%#{$tag}%")->get();
+        }
+        // Only return unique questions since a question may have multiple hashtags
+        return array_unique($questions);
     }
 }
