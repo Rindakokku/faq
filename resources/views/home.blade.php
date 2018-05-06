@@ -62,10 +62,8 @@
                 location.reload();
             }
             $.getJSON("{{route('questions.search', [])}}?tags=" + taglist, function (data) {
+                $("#questions-deck").html(``);
                 $.each(data, function (i, question) {
-                    if (i === 0) {
-                        $("#questions-deck").html(``);
-                    }
                     console.log(question);
                     var questionsHtml = `
                         <div class="col-sm-4 d-flex align-items-stretch"><div class="card mb-3 "><div class="card-header"><small class="text-muted">
